@@ -1,35 +1,53 @@
-import { DynamicModule, Module, Type } from '@nestjs/common';
-import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { ObjectLiteral } from 'typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { PassportModule } from '@nestjs/passport';
+import { DynamicModule, Global, Module, Type } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { LocalStrategy } from './strategy/local.strategy';
-import { JwtAccessTokenStrategy, JwtRefreshTokenStrategy } from './strategy/jwt.strategy';
-import { AuthModuleOptions, UserAuthServiceType } from './types';
-import { EXTRA_OPTIONS, USER_ENTITY, USER_SERVICE } from './symbols';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import {
+  JwtAccessTokenStrategy,
+  JwtRefreshTokenStrategy,
+  LocalStrategy,
+} from './strategy/strategies';
+import {
+  AuthModuleOptions,
+  AUTH_OPTIONS,
+  UserAuthServiceType,
+  USER_ENTITY,
+  USER_SERVICE,
+} from './types';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
-import { ObjectLiteral } from 'typeorm';
 
 @Module({})
+@Global()
 export class AuthModule {
   static register<
     Entity extends ObjectLiteral = ObjectLiteral,
     JwtPayload extends ObjectLiteral = ObjectLiteral,
     RegisterDTO extends ObjectLiteral = ObjectLiteral,
   >(opts: AuthModuleOptions<Entity, JwtPayload>): DynamicModule {
-    const  { typeormUserEntity, userService, options, imports } = opts;
+    const { typeormUserEntity, userService, options, imports } = opts;
+    const UserServiceClass =
+      (userService as unknown as Type<
+        UserAuthServiceType<Entity, JwtPayload, RegisterDTO>
+      >) || class UseDefaultUserService {};
+    const jwtOptions = {
+      signOptions: {
+        expiresIn: '900s',
+      },
+      ...(options.jwt || {}),
+    };
     return {
       module: AuthModule,
       imports: [
         PassportModule,
-        JwtModule.register({
-          signOptions: { expiresIn: '900s' },
-          ...(options.jwt || {}),
-        }),
-        typeormUserEntity ? TypeOrmModule.forFeature([typeormUserEntity as EntityClassOrSchema]) : null,
+        JwtModule.register(jwtOptions),
+        typeormUserEntity
+          ? TypeOrmModule.forFeature([typeormUserEntity as EntityClassOrSchema])
+          : null,
         ...(imports || []),
-      ].filter(i => !!i),
+      ].filter((i) => !!i),
       providers: [
         {
           provide: USER_ENTITY,
@@ -37,19 +55,20 @@ export class AuthModule {
         },
         {
           provide: USER_SERVICE,
-          useClass: userService as unknown as Type<UserAuthServiceType<Entity, JwtPayload, RegisterDTO>> || class UseDefaultUserService {},
+          useClass: UserServiceClass,
         },
         {
-          provide: EXTRA_OPTIONS,
+          provide: AUTH_OPTIONS,
           useValue: options,
         },
-        AuthService<Entity, JwtPayload>,
+        UserServiceClass,
+        AuthService<Entity, JwtPayload, RegisterDTO>,
         JwtAccessTokenStrategy<Entity, JwtPayload>,
         JwtRefreshTokenStrategy<Entity, JwtPayload>,
         LocalStrategy<Entity>,
       ],
-      exports: [AuthService],
-      controllers: [AuthController],
+      exports: [AuthService, USER_SERVICE],
+      controllers: opts.options.disableApi ? [] : [AuthController],
     };
   }
 }
