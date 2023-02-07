@@ -303,11 +303,14 @@ export class BaseUserService<
     user: Entity,
     refreshToken: string,
     accessToken: string,
+    refreshTokenExpiresAt: number,
+    accessTokenExpiresAt: number,
   ) {
     return {
-      // user,
-      accessToken,
-      refreshToken,
+      refresh_token: refreshToken,
+      access_token: accessToken,
+      token_type: 'Bearer',
+      expires_at: accessTokenExpiresAt,
     };
   }
 }

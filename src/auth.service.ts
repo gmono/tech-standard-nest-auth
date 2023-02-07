@@ -146,6 +146,12 @@ export class AuthService<
 
     const [accessToken, refreshToken] = await Promise.all(tokenPromises);
 
-    return { user, accessToken, refreshToken };
+    return {
+      user,
+      accessToken,
+      refreshToken: refreshToken || refresh_token,
+      refreshTokenExpiresAt: getTokenExpiresIn(refreshToken || refresh_token),
+      accessTokenExpiresAt: getTokenExpiresIn(accessToken)
+    };
   }
 }

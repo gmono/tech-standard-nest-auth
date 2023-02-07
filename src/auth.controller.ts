@@ -112,12 +112,14 @@ export class AuthController {
     if (!refresh_token) {
       throw new Error('Refresh token is required');
     }
-    const { user, accessToken, refreshToken } =
+    const { user, accessToken, refreshToken, refreshTokenExpiresAt, accessTokenExpiresAt } =
       await this.authService.refreshToken(refresh_token);
     return await this.authService.userService.onBeforeRefreshTokenResponse(
       user,
       refreshToken,
       accessToken,
+      refreshTokenExpiresAt,
+      accessTokenExpiresAt,
     );
   }
 

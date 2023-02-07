@@ -183,5 +183,7 @@ export abstract class UserAuthServiceType<Entity, JwtPayloadSub, RegisterDTO> {
     user: Entity,
     refreshToken: string,
     accessToken: string,
+    refreshTokenExpiresAt: number,
+    accessTokenExpiresAt: number,
   ): Promise<any>;
 }
