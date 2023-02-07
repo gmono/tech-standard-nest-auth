@@ -37,7 +37,7 @@ export class BaseUserService<
 
   // Custom request body fields for local login
   public requestUsernameField = 'username';
-  public requestPasswordField = 'passwd';
+  public requestPasswordField = 'password';
 
   // Custom user register method
   async register(data: RegisterDTO): Promise<{ user: Entity, token: string }> {

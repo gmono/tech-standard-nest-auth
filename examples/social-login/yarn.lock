@@ -4839,7 +4839,7 @@ tar@^6.1.11:
 
 "tech-standard-nest-auth@file:../../tech-standard-nest-auth-v0.0.1.tgz":
   version "0.0.1"
-  resolved "file:../../tech-standard-nest-auth-v0.0.1.tgz#6193ae10a4308841a474ca7ba0edadd434d74b04"
+  resolved "file:../../tech-standard-nest-auth-v0.0.1.tgz#2c0320b320246bf6f9403b52fa6f6c02125021a7"
   dependencies:
     "@nestjs/common" "^9.3.3"
     "@nestjs/core" "^9.3.3"
