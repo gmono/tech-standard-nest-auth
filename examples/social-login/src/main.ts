@@ -35,7 +35,7 @@ export const createTypeOrmMOdule = (entities: MixedList<string | Function | Enti
               clientID: 'facebook_client_id',
               clientSecret: 'facebook_client_secret',
               callbackURL:
-                'http://localhost:3000/social/sign-in/facebook/callback',
+                'http://localhost:8002/social/sign-in/facebook/callback',
             },
             passportVerifier,
           ),
@@ -54,4 +54,9 @@ export const createTypeOrmMOdule = (entities: MixedList<string | Function | Enti
 export class AppModule { }
 
 
-(async () => (await NestFactory.create(AppModule)).listen(3000))();
+(async () => {
+  const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
+  app.enableCors();
+  await app.listen(8002);
+})();
