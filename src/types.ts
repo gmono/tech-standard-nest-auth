@@ -115,13 +115,14 @@ export abstract class UserAuthServiceType<Entity, JwtPayloadSub, RegisterDTO> {
     return this;
   }
 
-  abstract register(data: RegisterDTO): Promise<Entity>;
+  abstract register(data: RegisterDTO): Promise<{ user: Entity, token: string }>;
   abstract login(username: string, password: string): Promise<Entity>;
-  abstract generateforgotPasswordToken(
+  abstract generateForgotPasswordToken(
     identityValue: string,
   ): Promise<{ user: Entity; token: string }>;
-  abstract verifyforgotPasswordToken(
+  abstract verifyToken(
     identityValue: string,
+    ignoreExpired?: boolean,
   ): Promise<{ user: Entity; createdAt: number }>;
   abstract createJwtAccessTokenPayload(
     user: Entity,
@@ -135,6 +136,11 @@ export abstract class UserAuthServiceType<Entity, JwtPayloadSub, RegisterDTO> {
     input: string,
     hashedPassword: string,
   ): Promise<boolean>;
+  abstract changePassword(
+    user: Entity,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<boolean>;
 
   abstract onBeforePassportAuthenticateResponse(
     provider: string,
@@ -142,6 +148,7 @@ export abstract class UserAuthServiceType<Entity, JwtPayloadSub, RegisterDTO> {
   ): Promise<any>;
   abstract onBeforeRegisterResponse(
     body: RegisterDTO,
+    token: string,
     user: Entity,
   ): Promise<any>;
   abstract onBeforeForgotPasswordResponse(
@@ -153,6 +160,17 @@ export abstract class UserAuthServiceType<Entity, JwtPayloadSub, RegisterDTO> {
     token: string,
     createdAt: number,
   ): Promise<any>;
+  abstract onBeforeVerifyRegisterResponse(
+    user: Entity,
+    token: string,
+    createdAt: number,
+  ): Promise<any>;
+  abstract onBeforeChangePasswordResponse(
+    user: Entity,
+    oldPassword: string,
+    newPassword: string,
+    success: boolean,
+  ): Promise<any>;
   abstract onBeforeLogoutResponse(accessToken: string): Promise<any>;
   abstract onBeforeLoginResponse(
     user: Entity,
@@ -162,7 +180,6 @@ export abstract class UserAuthServiceType<Entity, JwtPayloadSub, RegisterDTO> {
     accessTokenExpiresAt: number,
   ): Promise<any>;
   abstract onBeforeRefreshTokenResponse(
-    oldPayload: JwtPayloadSub,
     user: Entity,
     refreshToken: string,
     accessToken: string,

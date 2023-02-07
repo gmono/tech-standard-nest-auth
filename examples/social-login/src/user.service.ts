@@ -1,5 +1,5 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { BaseUserService, AuthModuleConfig, AUTH_CONFIG, PassportCallbackData } from '@tech-standard-nest-auth';
+import { BaseUserService, AuthModuleConfig, AUTH_CONFIG, PassportCallbackData } from 'tech-standard-nest-auth';
 import { DataSource } from 'typeorm';
 import { UserEntity } from './user.entity';
 

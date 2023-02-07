@@ -10,21 +10,33 @@ import {
 } from '@nestjs/common';
 import {
   AccessTokenAuthGuard,
-  RefreshTokenAuthGuard,
   LocalAuthGuard,
 } from './strategy/guards';
 import { AuthService } from './auth.service';
 
 @Controller('')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('/register')
   async register(@Body() body) {
-    const user = await this.authService.userService.register(body);
+    const { user, token } = await this.authService.userService.register(body);
     return await this.authService.userService.onBeforeRegisterResponse(
       body,
+      token,
       user,
+    );
+  }
+
+  @Get('/confirm')
+  async confirm(@Req() req: Request) {
+    const token = req.query.token as string;
+    const { user, createdAt } =
+      await this.authService.userService.verifyToken(token);
+    return await this.authService.userService.onBeforeVerifyRegisterResponse(
+      user,
+      token,
+      createdAt,
     );
   }
 
@@ -49,9 +61,10 @@ export class AuthController {
   @Post('/forgot-password')
   async forgotPassword(@Body() body) {
     const { user, token } =
-      await this.authService.userService.generateforgotPasswordToken(
+      await this.authService.userService.generateForgotPasswordToken(
         body.email,
       );
+    console.log({ token });
     return await this.authService.userService.onBeforeForgotPasswordResponse(
       user,
       token,
@@ -62,11 +75,25 @@ export class AuthController {
   async verifyForgotPaswordToken(@Req() req: Request) {
     const token = req.query.token as string;
     const { user, createdAt } =
-      await this.authService.userService.verifyforgotPasswordToken(token);
+      await this.authService.userService.verifyToken(token);
     return await this.authService.userService.onBeforeVerifyForgotPasswordResponse(
       user,
       token,
       createdAt,
+    );
+  }
+
+  @Post('/change-password')
+  async changePassword(@Body() body) {
+    const { old_password, password, token } = body;
+    const { user } = await this.authService.userService.verifyToken(token, true);
+
+    const result = await this.authService.userService.changePassword(user, old_password, password);
+    return await this.authService.userService.onBeforeChangePasswordResponse(
+      user,
+      old_password,
+      password,
+      result,
     );
   }
 
@@ -79,13 +106,15 @@ export class AuthController {
     );
   }
 
-  @UseGuards(RefreshTokenAuthGuard)
-  @Get('refresh')
-  async refreshTokens(@Req() req: Request) {
+  @Post('refresh')
+  async refreshTokens(@Body() body, @Req() req: Request) {
+    const { refresh_token } = body;
+    if (!refresh_token) {
+      throw new Error('Refresh token is required');
+    }
     const { user, accessToken, refreshToken } =
-      await this.authService.refreshToken(req.user);
+      await this.authService.refreshToken(refresh_token);
     return await this.authService.userService.onBeforeRefreshTokenResponse(
-      req.user,
       user,
       refreshToken,
       accessToken,

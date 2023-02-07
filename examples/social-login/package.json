@@ -18,19 +18,20 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "reload": "(yarn remove tech-standard-nest-auth --force && yarn cache clean --force || yarn add file:../../tech-standard-nest-auth-v0.0.1.tgz) && yarn add file:../../tech-standard-nest-auth-v0.0.1.tgz"
   },
   "dependencies": {
-    "@nestjs/common": "^9.0.0",
-    "@nestjs/core": "^9.0.0",
+    "@nestjs/common": "^9.3.3",
+    "@nestjs/core": "^9.3.3",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/typeorm": "^9.0.1",
-    "@tech-standard-nest-auth": "file:../../tech-standard-nest-auth-v0.0.1.tgz",
     "mysql2": "^2.3.3",
     "passport-facebook": "^3.0.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.8.0",
+    "tech-standard-nest-auth": "file:../../tech-standard-nest-auth-v0.0.1.tgz",
     "typeorm": "^0.3.11",
     "typescript": "4.9.4"
   },
@@ -41,6 +42,7 @@
     "@types/express": "^4.17.13",
     "@types/jest": "28.1.8",
     "@types/node": "^16.0.0",
+    "@types/passport-facebook": "^2.1.11",
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",

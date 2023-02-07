@@ -7,15 +7,17 @@
 - JWT authentication.
 
 ## Supported routers
-- POST /login
-- POST /register
-- POST /forgot-password
-- GET /forgot-password
-- GET /logout
-- GET /refresh
-- GET /me
-- GET /social/sign-in/:provider
-- GET /social/sign-in/:provider/callback
+- POST  /login
+- POST  /register
+- GET   /confirm
+- POST  /forgot-password
+- GET   /forgot-password
+- POST  /change-password
+- GET   /logout
+- POST  /refresh
+- GET   /me
+- GET   /social/sign-in/:provider
+- GET   /social/sign-in/:provider/callback
 
 ## Usage:
 
@@ -26,7 +28,7 @@ import { AuthModule } from '@tech-standard-nest-auth';
   imports: [
     createTypeOrmMOdule([UserEntity]),
     AuthModule.register<UserEntity>({
-      authKey: '8b1Rw40iCtys6Lu2W4PuuKKJ7ABuiqBZ',
+      authKey: 'auth_key_with_32_bytes_randomly_',
       typeormUserEntity: UserEntity,
     }),
   ],

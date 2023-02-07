@@ -118,7 +118,12 @@ export class AuthService<
     };
   }
 
-  async refreshToken(payload: JwtPayload) {
+  async refreshToken(refresh_token: string) {
+    const payload = this.jwtService.verify(refresh_token, {
+      ...(this.opts.jwt.refresh || {}),
+      ignoreExpiration: false,
+    });
+
     const user = await this.userService.jwtValidator(payload);
     if (!user) {
       throw new UnauthorizedException();
