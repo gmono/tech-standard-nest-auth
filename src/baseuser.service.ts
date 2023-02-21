@@ -26,7 +26,7 @@ export class BaseUserService<
   constructor(
     public userRepository: Repository<Entity>,
     @Inject(AUTH_CONFIG) public options: AuthModuleConfig,
-  ) {}
+  ) { }
 
   // Custom user ID field, default is 'id'
   public IDField = 'id';
@@ -37,10 +37,10 @@ export class BaseUserService<
 
   // Custom request body fields for local login
   public requestUsernameField = 'username';
-  public requestPasswordField = 'passwd';
+  public requestPasswordField = 'password';
 
   // Custom user register method
-  async register(data: RegisterDTO): Promise<Entity> {
+  async register(data: RegisterDTO): Promise<{ user: Entity, token: string }> {
     const userData = data as unknown as Entity;
     const passwordField = this.dbPasswordField as keyof Entity;
     userData[passwordField] = (await this.hashPassword(
@@ -52,7 +52,16 @@ export class BaseUserService<
     const savedUser = await this.userRepository.save(user);
     delete savedUser[passwordField];
 
-    return savedUser;
+    // token should be url encoded before sending to client
+    const token = encrypt(
+      JSON.stringify({
+        [this.IDField]: savedUser[this.IDField],
+        createdAt: new Date().getTime(),
+      }),
+      this.options.recovery.tokenSecret,
+    );
+
+    return { user: savedUser, token };
   }
 
   // Custom user login method
@@ -62,6 +71,10 @@ export class BaseUserService<
         [field]: username,
       })) as FindOptionsWhere<Entity>[],
     });
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
 
     const validPassword = await this.verifyPassword(
       password,
@@ -76,7 +89,7 @@ export class BaseUserService<
   }
 
   // Custom user forgot password method
-  async generateforgotPasswordToken(
+  async generateForgotPasswordToken(
     identityValue: string,
   ): Promise<{ user: Entity; token: string }> {
     const user = await this.userRepository.findOne({
@@ -101,8 +114,9 @@ export class BaseUserService<
     return { user, token };
   }
 
-  async verifyforgotPasswordToken(
+  async verifyToken(
     token: string,
+    ignoreExpired?: boolean,
   ): Promise<{ user: Entity; createdAt: number }> {
     const decrypted = decrypt(token, this.options.recovery.tokenSecret);
     const result = JSON.parse(decrypted);
@@ -115,6 +129,7 @@ export class BaseUserService<
     }
 
     if (
+      !ignoreExpired &&
       new Date().getTime() - result.createdAt >
       this.options.recovery.tokenExpiresIn * 1000
     ) {
@@ -122,6 +137,32 @@ export class BaseUserService<
     }
 
     return { user, createdAt: result.createdAt };
+  }
+
+  async changePassword(user: Entity, oldPassword: string, newPassword: string): Promise<boolean> {
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (!oldPassword || !newPassword) {
+      throw new UnauthorizedException('Password cannot be empty');
+    }
+
+
+    const validPassword = await this.verifyPassword(
+      oldPassword,
+      user[this.dbPasswordField] as string,
+    );
+
+    if (!validPassword) {
+      throw new UnauthorizedException('Old password is incorrect');
+    }
+
+    const passwordField = this.dbPasswordField as keyof Entity;
+    user[passwordField] = await this.hashPassword(newPassword) as Entity[keyof Entity];
+    await this.userRepository.save(user);
+
+    return false
   }
 
   async hashPassword(input: string): Promise<string> {
@@ -192,9 +233,10 @@ export class BaseUserService<
     throw new Error('Method not implemented.');
   }
 
-  async onBeforeRegisterResponse(body: RegisterDTO, user: Entity) {
+  async onBeforeRegisterResponse(body: RegisterDTO, token: string, user: Entity) {
     return {
       // body,
+      // token,
       user,
     };
   }
@@ -235,21 +277,40 @@ export class BaseUserService<
     };
   }
 
+  async onBeforeVerifyRegisterResponse(
+    user: Entity,
+    token: string,
+    createdAt: number,
+  ) {
+    return {
+      ok: true,
+      type: 'verifyRegister',
+    };
+  }
+
+  async onBeforeChangePasswordResponse(user: Entity, oldPassword: string, newPassword: string, success: boolean): Promise<any> {
+    return {
+      ok: true,
+      type: 'changePassword',
+    };
+  }
+
   async onBeforeLogoutResponse(accessToken: string) {
     return null;
   }
 
   async onBeforeRefreshTokenResponse(
-    payload: JwtPayloadSub,
     user: Entity,
     refreshToken: string,
     accessToken: string,
+    refreshTokenExpiresAt: number,
+    accessTokenExpiresAt: number,
   ) {
     return {
-      // payload,
-      // user,
-      accessToken,
-      refreshToken,
+      refresh_token: refreshToken,
+      access_token: accessToken,
+      token_type: 'Bearer',
+      expires_at: accessTokenExpiresAt,
     };
   }
 }

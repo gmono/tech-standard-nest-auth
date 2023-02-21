@@ -1,5 +1,5 @@
 import { JwtModule } from '@nestjs/jwt';
-import { ObjectLiteral } from 'typeorm';
+import { DataSource, ObjectLiteral } from 'typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { DynamicModule, Global, Module, Type } from '@nestjs/common';

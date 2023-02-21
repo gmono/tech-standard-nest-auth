@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EntitySchema, MixedList } from 'typeorm';
 import { DynamicModule, Module } from '@nestjs/common';
-import { AuthModule } from '@tech-standard-nest-auth';
+import { AuthModule } from 'tech-standard-nest-auth';
 import { UserEntity } from './user.entity';
 import { CustomUserService } from './user.service';
 

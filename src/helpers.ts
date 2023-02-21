@@ -129,7 +129,7 @@ export const getOptions = <Entity, JwtPayload>(
         ),
         passportStrategies: opts?.config?.passportStrategies || [],
       },
-      opts?.config || {},
+      // opts?.config || {},
     ),
   };
 

@@ -18,18 +18,20 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "reload": "(yarn remove tech-standard-nest-auth --force || yarn add file:../../tech-standard-nest-auth-v0.0.1.tgz) && yarn add file:../../tech-standard-nest-auth-v0.0.1.tgz"
   },
   "dependencies": {
-    "@tech-standard-nest-auth": "file:../../tech-standard-nest-auth-v0.0.1.tgz",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/typeorm": "^9.0.1",
+    "@tech-standard-nest-auth": "file:../../tech-standard-nest-auth-v0.0.1.tgz",
     "mysql2": "^2.3.3",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.8.0",
+    "tech-standard-nest-auth": "file:../../tech-standard-nest-auth-v0.0.1.tgz",
     "typeorm": "^0.3.11",
     "typescript": "4.9.4"
   },

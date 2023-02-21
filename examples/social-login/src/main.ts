@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EntitySchema, MixedList } from 'typeorm';
 import { DynamicModule, Module } from '@nestjs/common';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
-import { AuthModule, passportVerifier } from '@tech-standard-nest-auth';
+import { AuthModule, passportVerifier } from 'tech-standard-nest-auth';
 import { UserEntity } from './user.entity';
 import { CustomUserServiceWithDataSource } from './user.service';
 
@@ -17,7 +17,7 @@ export const createTypeOrmMOdule = (entities: MixedList<string | Function | Enti
     database: 'auth_lib_poc',
     synchronize: true,
     autoLoadEntities: true,
-    logging: false,
+    logging: true,
     entities: entities,
   })
 };
@@ -35,11 +35,16 @@ export const createTypeOrmMOdule = (entities: MixedList<string | Function | Enti
               clientID: 'facebook_client_id',
               clientSecret: 'facebook_client_secret',
               callbackURL:
-                'http://localhost:3000/social/sign-in/facebook/callback',
+                'http://localhost:8002/social/sign-in/facebook/callback',
             },
             passportVerifier,
           ),
         ],
+        jwt: {
+          refresh: {
+            expiresIn: '7d',
+          }
+        },
       },
     }),
   ],
@@ -49,4 +54,9 @@ export const createTypeOrmMOdule = (entities: MixedList<string | Function | Enti
 export class AppModule { }
 
 
-(async () => (await NestFactory.create(AppModule)).listen(3000))();
+(async () => {
+  const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
+  app.enableCors();
+  await app.listen(8002);
+})();
