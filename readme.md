@@ -69,6 +69,9 @@ export interface JwtOptions extends JwtModuleOptions {
 }
 ```
 
+## Documentation:
+https://github.com/sun-asterisk/tech-standard-nest-auth/wiki
+
 ## Roadmap
 - [x] Base module with local strategy.
 - [x] Refresh token.
