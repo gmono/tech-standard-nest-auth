@@ -47,7 +47,7 @@ export class BaseUserService<
       userData[passwordField] as string,
     )) as Entity[keyof Entity];
     const user = this.userRepository.create(
-      data as unknown as DeepPartial<Entity>,
+      userData as unknown as DeepPartial<Entity>,
     );
     const savedUser = await this.userRepository.save(user);
     delete savedUser[passwordField];

@@ -1,5 +1,5 @@
 {
-  "name": "tech-standard-nest-auth",
+  "name": "@sun-asterisk/nest-auth",
   "version": "0.0.1",
   "description": "Authentication module for Nest framework (node.js)",
   "author": "Nguyen Ngoc Phuong",
