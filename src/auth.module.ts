@@ -67,7 +67,7 @@ export class AuthModule {
         JwtRefreshTokenStrategy<Entity, JwtPayload>,
         LocalStrategy<Entity>,
       ],
-      exports: [AuthService, USER_SERVICE],
+      exports: [AuthService, USER_SERVICE, AUTH_CONFIG],
       controllers: opts.config.disableApi ? [] : [AuthController],
     };
   }

@@ -38,7 +38,7 @@ export class AuthService<
       this.userService = new BaseUserService(this.userRepository, opts);
     }
 
-    if (opts.passportStrategies) {
+    if (opts.passportStrategies && opts.passportStrategies.length) {
       if (
         this.userService.onBeforePassportAuthenticateResponse ===
         BaseUserService.prototype.onBeforePassportAuthenticateResponse
