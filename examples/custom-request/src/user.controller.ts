@@ -34,7 +34,7 @@ export class UserController {
     );
     // Send token to the user email
     console.log({ token });
-    
+
     return {
       status: 'ok',
     };

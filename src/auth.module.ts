@@ -18,14 +18,15 @@ import {
 } from './types';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 import { getOptions } from './helpers';
+import { ObjectLiteral } from 'typeorm';
 
 @Module({})
 @Global()
 export class AuthModule {
   static register<
-    Entity extends Object = Object,
-    JwtPayload extends Object = Object,
-    RegisterDTO extends Object = Object,
+    Entity extends ObjectLiteral = ObjectLiteral,
+    JwtPayload extends ObjectLiteral = ObjectLiteral,
+    RegisterDTO extends ObjectLiteral = ObjectLiteral,
   >(opts: AuthModuleOptions<Entity, JwtPayload, RegisterDTO>): DynamicModule {
     if (opts.authKey.length < 32) {
       throw new Error('authKey must be at least 32 characters long');

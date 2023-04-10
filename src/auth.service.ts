@@ -16,9 +16,9 @@ import {
 
 @Injectable()
 export class AuthService<
-  Entity extends ObjectLiteral = {},
-  JwtPayload extends ObjectLiteral = {},
-  RegisterDTO extends ObjectLiteral = {},
+  Entity extends ObjectLiteral = ObjectLiteral,
+  JwtPayload extends ObjectLiteral = ObjectLiteral,
+  RegisterDTO extends ObjectLiteral = ObjectLiteral,
 > {
   private userRepository: Repository<Entity>;
   passport: passport.Authenticator;
