@@ -1,5 +1,5 @@
 import * as argon2 from 'argon2';
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { decrypt, encrypt } from './helpers';
 import {
   DeepPartial,
@@ -32,7 +32,7 @@ export class BaseUserService<
   public IDField = 'id';
 
   // Custom DB fields for checking local user login
-  public dbUsernameFields: string[] = ['username', 'email'];
+  public dbIdentityFields: string[] = ['username', 'email'];
   public dbPasswordField = 'password';
 
   // Custom request body fields for local login
@@ -42,6 +42,24 @@ export class BaseUserService<
   // Custom user register method
   async register(data: RegisterDTO): Promise<{ user: Entity, token: string }> {
     const userData = data as unknown as Entity;
+
+    this.dbIdentityFields.forEach(identityField => {
+      if (!userData[identityField]) {
+        throw new UnprocessableEntityException('Invalid user register data');
+      }
+    });
+
+    // Check if user existed by identity fields
+    const existedUser = await this.userRepository.findOne({
+      where: this.dbIdentityFields.map((field) => ({
+        [field]: userData[field],
+      })) as FindOptionsWhere<Entity>[],
+    });
+
+    if (existedUser) {
+      throw new UnprocessableEntityException('User existed');
+    }
+
     const passwordField = this.dbPasswordField as keyof Entity;
     userData[passwordField] = (await this.hashPassword(
       userData[passwordField] as string,
@@ -66,8 +84,12 @@ export class BaseUserService<
 
   // Custom user login method
   async login(username: string, password: string): Promise<Entity> {
+    if (!username || !password) {
+      throw new UnauthorizedException('Invalid login credentials');
+    }
+
     const user = await this.userRepository.findOne({
-      where: this.dbUsernameFields.map((field) => ({
+      where: this.dbIdentityFields.map((field) => ({
         [field]: username,
       })) as FindOptionsWhere<Entity>[],
     });
@@ -92,8 +114,12 @@ export class BaseUserService<
   async generateForgotPasswordToken(
     identityValue: string,
   ): Promise<{ user: Entity; token: string }> {
+    if (!identityValue) {
+      throw new UnauthorizedException('Invalid identity value');
+    }
+
     const user = await this.userRepository.findOne({
-      where: this.dbUsernameFields.map((field) => ({
+      where: this.dbIdentityFields.map((field) => ({
         [field]: identityValue,
       })) as FindOptionsWhere<Entity>[],
     });
@@ -118,44 +144,62 @@ export class BaseUserService<
     token: string,
     ignoreExpired?: boolean,
   ): Promise<{ user: Entity; createdAt: number }> {
-    const decrypted = decrypt(token, this.options.recovery.tokenSecret);
-    const result = JSON.parse(decrypted);
+    if (!token) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    let result = {
+      createdAt: 0,
+    };
+
+    try {
+      const decrypted = decrypt(token, this.options.recovery.tokenSecret);
+      result = JSON.parse(decrypted);
+    } catch (e) {
+      throw new UnauthorizedException();
+    }
+
+    const now = new Date().getTime();
+    const expiresInSeconds = this.options.recovery.tokenExpiresIn * 1000;
     const user = await this.userRepository.findOneBy({
       [this.IDField]: result[this.IDField],
     } as FindOptionsWhere<Entity>);
 
-    if (!user) {
-      throw new UnauthorizedException();
+    if (user && (
+      ignoreExpired ||
+      now - result.createdAt <= expiresInSeconds
+    )) {
+      return { user, createdAt: result.createdAt };
     }
-
-    if (
-      !ignoreExpired &&
-      new Date().getTime() - result.createdAt >
-      this.options.recovery.tokenExpiresIn * 1000
-    ) {
-      throw new UnauthorizedException();
-    }
-
-    return { user, createdAt: result.createdAt };
   }
 
-  async changePassword(user: Entity, oldPassword: string, newPassword: string): Promise<boolean> {
+  async changePassword(
+    user: Entity,
+    newPassword: string,
+    isForgot?: boolean,
+    oldPassword?: string,
+  ): Promise<boolean> {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    if (!oldPassword || !newPassword) {
-      throw new UnauthorizedException('Password cannot be empty');
+    if (!newPassword) {
+      throw new UnauthorizedException('New password is required');
     }
 
+    if (!isForgot && !oldPassword) {
+      throw new UnauthorizedException('Old password is required');
+    }
 
-    const validPassword = await this.verifyPassword(
-      oldPassword,
-      user[this.dbPasswordField] as string,
-    );
-
-    if (!validPassword) {
-      throw new UnauthorizedException('Old password is incorrect');
+    // If user is changing password from forgot password page, verify old password
+    if (!isForgot && oldPassword) {
+      const isOldPasswordValid = await this.verifyPassword(
+        oldPassword,
+        user[this.dbPasswordField] as string,
+      );
+      if (!isOldPasswordValid) {
+        throw new UnauthorizedException('Old password is incorrect');
+      }
     }
 
     const passwordField = this.dbPasswordField as keyof Entity;
@@ -222,7 +266,7 @@ export class BaseUserService<
       throw new UnauthorizedException();
     }
 
-    delete user[this.dbPasswordField];
+    // delete user[this.dbPasswordField];
     return user;
   }
 
@@ -307,9 +351,9 @@ export class BaseUserService<
     accessTokenExpiresAt: number,
   ) {
     return {
+      token_type: 'Bearer',
       refresh_token: refreshToken,
       access_token: accessToken,
-      token_type: 'Bearer',
       expires_at: accessTokenExpiresAt,
     };
   }

@@ -77,7 +77,6 @@ export interface JwtOptions extends JwtModuleOptions {
 }
 
 export interface AuthModuleConfig {
-  disableApi?: boolean;
   enableRefreshTokenRotation?: boolean;
   passwordHashSecret?: string;
   jwt?: JwtOptions;
@@ -97,6 +96,7 @@ export interface AuthModuleOptions<
   typeormUserEntity?: EntityTarget<Entity>;
   userService?: typeof UserAuthServiceType<Entity, JwtPayload, RegisterDTO>;
   imports?: NestModule[];
+  disableRouter?: boolean;
   config?: AuthModuleConfig;
 }
 
@@ -106,7 +106,7 @@ export interface JwtPayload<T = any> {
 
 export abstract class UserAuthServiceType<Entity, JwtPayloadSub, RegisterDTO> {
   public IDField = 'id';
-  public dbUsernameFields?: string[];
+  public dbIdentityFields?: string[];
   public dbPasswordField?: string;
   public requestUsernameField?: string;
   public requestPasswordField?: string;
@@ -138,8 +138,9 @@ export abstract class UserAuthServiceType<Entity, JwtPayloadSub, RegisterDTO> {
   ): Promise<boolean>;
   abstract changePassword(
     user: Entity,
-    oldPassword: string,
     newPassword: string,
+    isForgot?: boolean,
+    oldPassword?: string,
   ): Promise<boolean>;
 
   abstract onBeforePassportAuthenticateResponse(

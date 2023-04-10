@@ -1,5 +1,4 @@
 import { JwtModule } from '@nestjs/jwt';
-import { DataSource, ObjectLiteral } from 'typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { DynamicModule, Global, Module, Type } from '@nestjs/common';
@@ -19,6 +18,7 @@ import {
 } from './types';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 import { getOptions } from './helpers';
+import { ObjectLiteral } from 'typeorm';
 
 @Module({})
 @Global()
@@ -27,7 +27,7 @@ export class AuthModule {
     Entity extends ObjectLiteral = ObjectLiteral,
     JwtPayload extends ObjectLiteral = ObjectLiteral,
     RegisterDTO extends ObjectLiteral = ObjectLiteral,
-  >(opts: AuthModuleOptions<Entity, JwtPayload>): DynamicModule {
+  >(opts: AuthModuleOptions<Entity, JwtPayload, RegisterDTO>): DynamicModule {
     if (opts.authKey.length < 32) {
       throw new Error('authKey must be at least 32 characters long');
     }
@@ -68,7 +68,7 @@ export class AuthModule {
         LocalStrategy<Entity>,
       ],
       exports: [AuthService, USER_SERVICE, AUTH_CONFIG],
-      controllers: opts.config.disableApi ? [] : [AuthController],
+      controllers: opts.disableRouter ? [] : [AuthController],
     };
   }
 }
