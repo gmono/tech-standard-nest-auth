@@ -7,6 +7,7 @@ import {
   Body,
   Req,
   Res,
+  HttpCode,
 } from '@nestjs/common';
 import {
   AccessTokenAuthGuard,
@@ -40,6 +41,7 @@ export class AuthController {
     );
   }
 
+  @HttpCode(200)
   @UseGuards(LocalAuthGuard)
   @Post('/login')
   async login(@Req() req: Request) {
@@ -58,13 +60,13 @@ export class AuthController {
     );
   }
 
+  @HttpCode(200)
   @Post('/forgot-password')
   async forgotPassword(@Body() body) {
     const { user, token } =
       await this.authService.userService.generateForgotPasswordToken(
-        body.email,
+        body?.identity,
       );
-    console.log({ token });
     return await this.authService.userService.onBeforeForgotPasswordResponse(
       user,
       token,
@@ -83,12 +85,35 @@ export class AuthController {
     );
   }
 
+  /**
+   * Change password
+   * Work in two cases:
+   * - Change password for logged in user. Payload:
+   *    - new password
+   *    - old password,
+   *    - access token
+   * - Change password for user that forgot password. Payload:
+   *    - new password
+   *    - verify forgot password token
+   * If there is a token --> user is resetting password through the forgot password flow.
+   */
+  @HttpCode(200)
   @Post('/change-password')
-  async changePassword(@Body() body) {
+  async changePassword(@Body() body, @Req() req: Request) {
     const { old_password, password, token } = body;
-    const { user } = await this.authService.userService.verifyToken(token, true);
+    const accessToken = this.authService.jwtExtractor()(req);
+    const user = await this.authService.getUserFromAccessTokenOrVerifyToken(
+      accessToken,
+      token,
+    );
 
-    const result = await this.authService.userService.changePassword(user, old_password, password);
+    const isForgot = !!token;
+    const result = await this.authService.userService.changePassword(
+      user,
+      password,
+      isForgot,
+      old_password,
+    );
     return await this.authService.userService.onBeforeChangePasswordResponse(
       user,
       old_password,
@@ -97,8 +122,9 @@ export class AuthController {
     );
   }
 
+  @HttpCode(200)
   @UseGuards(AccessTokenAuthGuard)
-  @Get('logout')
+  @Post('logout')
   async logout(@Req() req: Request) {
     const accessToken = this.authService.jwtExtractor()(req);
     return await this.authService.userService.onBeforeLogoutResponse(
@@ -106,12 +132,10 @@ export class AuthController {
     );
   }
 
+  @HttpCode(200)
   @Post('refresh')
   async refreshTokens(@Body() body, @Req() req: Request) {
     const { refresh_token } = body;
-    if (!refresh_token) {
-      throw new Error('Refresh token is required');
-    }
     const { user, accessToken, refreshToken, refreshTokenExpiresAt, accessTokenExpiresAt } =
       await this.authService.refreshToken(refresh_token);
     return await this.authService.userService.onBeforeRefreshTokenResponse(

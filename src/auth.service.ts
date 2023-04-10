@@ -16,9 +16,9 @@ import {
 
 @Injectable()
 export class AuthService<
-  Entity extends ObjectLiteral = ObjectLiteral,
-  JwtPayload extends ObjectLiteral = ObjectLiteral,
-  RegisterDTO extends ObjectLiteral = ObjectLiteral,
+  Entity extends ObjectLiteral = {},
+  JwtPayload extends ObjectLiteral = {},
+  RegisterDTO extends ObjectLiteral = {},
 > {
   private userRepository: Repository<Entity>;
   passport: passport.Authenticator;
@@ -58,6 +58,38 @@ export class AuthService<
         );
       }
     }
+  }
+
+  async getUserFromAccessTokenOrVerifyToken(
+    accessToken?: string,
+    token?: string,
+    ignoreExpiration?: boolean,
+  ): Promise<Entity> {
+    let user: Entity;
+    if (accessToken) {
+      let payload: JwtPayload;
+      try {
+        payload = this.jwtService.verify(accessToken, {
+          ...(this.opts.jwt.refresh || {}),
+          ignoreExpiration,
+        });
+      } catch (e) {
+        throw new UnauthorizedException();
+      }
+
+      user = await this.userService.jwtValidator(payload);
+    }
+
+    if (token) {
+      const { user: userFromToken } = await this.userService.verifyToken(token, ignoreExpiration);
+      user = userFromToken;
+    }
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return user;
   }
 
   passportAuthenticate(providerName: string, req: Request, res: Response) {
@@ -119,10 +151,19 @@ export class AuthService<
   }
 
   async refreshToken(refresh_token: string) {
-    const payload = this.jwtService.verify(refresh_token, {
-      ...(this.opts.jwt.refresh || {}),
-      ignoreExpiration: false,
-    });
+    if (!refresh_token) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
+
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify(refresh_token, {
+        ...(this.opts.jwt.refresh || {}),
+        ignoreExpiration: false,
+      });
+    } catch (e) {
+      throw new UnauthorizedException();
+    }
 
     const user = await this.userService.jwtValidator(payload);
     if (!user) {

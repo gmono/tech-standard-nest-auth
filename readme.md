@@ -51,7 +51,7 @@ export interface AuthModuleOptions {
 
 // Strategy from @types/passport
 export interface AuthModuleConfig {
-  disableApi?: boolean;
+  disableRouter?: boolean;
   enableRefreshTokenRotation?: boolean;
   passwordHashSecret?: string;
   passportStrategies?: Strategy[];

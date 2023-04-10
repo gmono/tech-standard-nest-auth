@@ -95,9 +95,9 @@ export const getOptions = <Entity, JwtPayload>(
     typeormUserEntity: opts.typeormUserEntity || undefined,
     userService: opts.userService || undefined,
     imports: opts.imports || [],
+    disableRouter: opts?.disableRouter || false,
     config: Object.assign(
       {
-        disableApi: opts?.config?.disableApi || false,
         enableRefreshTokenRotation:
           opts?.config?.enableRefreshTokenRotation || false,
         passwordHashSecret: opts?.config?.passwordHashSecret || opts.authKey,
