@@ -1,5 +1,7 @@
 # NestJS Authentication Library Proof of Concept
 
+[![CI](https://github.com/sun-asterisk/tech-standard-nest-auth/actions/workflows/check_ci.yml/badge.svg)](https://github.com/sun-asterisk/tech-standard-nest-auth/actions/workflows/check_ci.yml)
+
 ## Features
 - Automatically authentication routers generation.
 - Local user register/login (email + password).
