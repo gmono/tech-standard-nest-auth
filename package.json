@@ -1,6 +1,6 @@
 {
   "name": "@sun-asterisk/nest-auth",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Authentication module for Nest framework (node.js)",
   "author": "Nguyen Ngoc Phuong",
   "license": "MIT",
