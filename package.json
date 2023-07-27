@@ -15,7 +15,8 @@
     "lint": "eslint 'src/**/*.ts' --fix",
     "precommit": "lint-staged",
     "test": "jest --runInBand",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "pub": "yarn build && yarn publish"
   },
   "lint-staged": {
     "**/*.{ts,json}": []
